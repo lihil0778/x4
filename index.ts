@@ -77,4 +77,5 @@ app.on(["GET", "POST"], "/mint/", (c) =>
   c.json({ report: { mint: "done", minted: 1 }, method: c.req.method }),
 );
 
-serve({ fetch: app.fetch, port: 4021 });
+serve({ fetch: app.fetch, port: Number(process.env.PORT || 4021) });
+
