@@ -6,12 +6,12 @@ import { cors } from "hono/cors";
 
 config();
 
-const facilitatorUrl = process.env.FACILITATOR_URL as Resource;
-const payTo = process.env.ADDRESS as `0x${string}`;
+const facilitatorUrl = "https://facilitator.payai.network";
+const payTo = "0x80B5a867E2f7AF7D0dd6dDB20fB477ed787A58F3";
 const network = "base";
 
 // ТВОЙ ПУБЛИЧНЫЙ HTTPS URL (этот же, что в x402scan)
-const PUBLIC_HTTPS = "https://cdffffcadee745cc79adfef72d443917.serveo.net";
+const PUBLIC_HTTPS = "https://mint1.up.railway.app/mint";
 
 // sanity-check env
 if (!facilitatorUrl || !payTo || !network) {
@@ -45,7 +45,7 @@ app.use(
     payTo,
     {
       "/mint": {
-        price: "0.5",
+        price: "$0.001",
         network,
         config: {
           resourceUrl: `${PUBLIC_HTTPS}/mint`,  // <— КРИТИЧЕСКОЕ МЕСТО
@@ -53,7 +53,7 @@ app.use(
         },
       },
       "/mint/": {
-        price: "0.5",
+        price: "$0.001",
         network,
         config: {
           resourceUrl: `${PUBLIC_HTTPS}/mint/`,
@@ -77,7 +77,4 @@ app.on(["GET", "POST"], "/mint/", (c) =>
   c.json({ report: { mint: "done", minted: 1 }, method: c.req.method }),
 );
 
-serve({ fetch: app.fetch, port: Number(process.env.PORT || 4021) });
-
-
-
+serve({ fetch: app.fetch, port: 4021 });
