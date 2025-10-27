@@ -45,7 +45,7 @@ app.use(
     payTo,
     {
       "/mint": {
-        price: "0.001",
+        price: "0.5",
         network,
         config: {
           resourceUrl: `${PUBLIC_HTTPS}/mint`,  // <— КРИТИЧЕСКОЕ МЕСТО
@@ -53,7 +53,7 @@ app.use(
         },
       },
       "/mint/": {
-        price: "0.001",
+        price: "0.5",
         network,
         config: {
           resourceUrl: `${PUBLIC_HTTPS}/mint/`,
@@ -78,5 +78,6 @@ app.on(["GET", "POST"], "/mint/", (c) =>
 );
 
 serve({ fetch: app.fetch, port: Number(process.env.PORT || 4021) });
+
 
 
