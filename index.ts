@@ -8,7 +8,7 @@ config();
 
 const facilitatorUrl = process.env.FACILITATOR_URL as Resource;
 const payTo = process.env.ADDRESS as `0x${string}`;
-const network = process.env.NETWORK as Network;
+const network = base;
 
 // ТВОЙ ПУБЛИЧНЫЙ HTTPS URL (этот же, что в x402scan)
 const PUBLIC_HTTPS = "https://cdffffcadee745cc79adfef72d443917.serveo.net";
@@ -45,7 +45,7 @@ app.use(
     payTo,
     {
       "/mint": {
-        price: "$0.001",
+        price: "0.001",
         network,
         config: {
           resourceUrl: `${PUBLIC_HTTPS}/mint`,  // <— КРИТИЧЕСКОЕ МЕСТО
@@ -53,7 +53,7 @@ app.use(
         },
       },
       "/mint/": {
-        price: "$0.001",
+        price: "0.001",
         network,
         config: {
           resourceUrl: `${PUBLIC_HTTPS}/mint/`,
@@ -78,3 +78,4 @@ app.on(["GET", "POST"], "/mint/", (c) =>
 );
 
 serve({ fetch: app.fetch, port: Number(process.env.PORT || 4021) });
+
