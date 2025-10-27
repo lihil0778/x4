@@ -8,7 +8,7 @@ config();
 
 const facilitatorUrl = process.env.FACILITATOR_URL as Resource;
 const payTo = process.env.ADDRESS as `0x${string}`;
-const network = base;
+const network = "base";
 
 // ТВОЙ ПУБЛИЧНЫЙ HTTPS URL (этот же, что в x402scan)
 const PUBLIC_HTTPS = "https://cdffffcadee745cc79adfef72d443917.serveo.net";
@@ -78,4 +78,5 @@ app.on(["GET", "POST"], "/mint/", (c) =>
 );
 
 serve({ fetch: app.fetch, port: Number(process.env.PORT || 4021) });
+
 
