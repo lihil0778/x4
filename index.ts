@@ -1,84 +1,50 @@
 import { config } from "dotenv";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { paymentMiddleware, Network, Resource } from "x402-hono";
 import { cors } from "hono/cors";
+// Важно: если в твоей версии по-другому — замени импорт на правильный:
+import { facilitator, settlePayment } from "x402-hono"; // или "x402-hono/core"
 
 config();
 
-const facilitatorUrl = process.env.FACILITATOR_URL as Resource;
+const PUBLIC_URL = process.env.PUBLIC_URL || "mint134.up.railway.app";
+const facilitatorUrl = process.env.FACILITATOR_URL!;
 const payTo = process.env.ADDRESS as `0x${string}`;
-const network = process.env.NETWORK as Network;
+const network = "base";
 
-// ТВОЙ ПУБЛИЧНЫЙ HTTPS URL (этот же, что в x402scan)
-const PUBLIC_HTTPS = "https://mint134.up.railway.app/";
-
-// sanity-check env
 if (!facilitatorUrl || !payTo || !network) {
-  console.error("Missing required environment variables");
+  console.error("Missing envs");
   process.exit(1);
 }
 
 const app = new Hono();
+app.use("*", cors({ origin: "*", allowMethods: ["GET","POST","OPTIONS","HEAD"], allowHeaders: ["*"] }));
 
-// CORS до paywall (preflight из браузера/x402scan)
-app.use(
-  "*",
-  cors({
-    origin: "*",
-    allowMethods: ["GET", "POST", "OPTIONS", "HEAD"],
-    allowHeaders: ["*"],
-  }),
-);
+// единый хендлер: и 402 с resource, и 200 после оплаты
+app.on(["GET","POST","OPTIONS","HEAD"], "/mint", async (c) => {
+  if (c.req.method === "OPTIONS" || c.req.method === "HEAD") return c.text("", 204);
 
-// лог — видим метод и наличие x-payment
-app.use("*", async (c, next) => {
-  console.log("[REQ]", c.req.method, c.req.path, "x-payment:", !!c.req.header("x-payment"));
-  return next();
+  const paymentData = c.req.header("x-payment") || null;
+
+  const result = await settlePayment({
+    resourceUrl: `${PUBLIC_URL}/mint`,     // ← КРИТИЧЕСКО: здесь задаём HTTPS-ресурс
+    method: c.req.method,                  // повторяем тот же метод (POST)
+    paymentData,
+    payTo,
+    network,
+    price: { amount: "$0.001" },           // или твой точный прайс/токен
+    facilitator: facilitator({ url: facilitatorUrl }),
+  });
+
+  if (result.status !== 200) {
+    return new Response(result.responseBody, {
+      status: result.status,
+      headers: result.responseHeaders,
+    });
+  }
+
+  return c.json({ ok: true, report: { weather: "sunny", temperature: 70 } });
 });
 
-console.log("Server is running");
-
-// ⬇️ Указываем HTTPS resourceUrl на оба пути: `/weather` и `/weather/`
-app.use(
-  paymentMiddleware(
-    payTo,
-    {
-      "/mint": {
-        price: "0.001",
-        network,
-        config: {
-          resourceUrl: `${PUBLIC_HTTPS}/mint`,  // <— КРИТИЧЕСКОЕ МЕСТО
-          description: "",
-        },
-      },
-      "/mint/": {
-        price: "0.001",
-        network,
-        config: {
-          resourceUrl: `${PUBLIC_HTTPS}/mint/`,
-          description: "",
-        },
-      },
-    },
-    { url: facilitatorUrl },
-  ),
-);
-
-// preflight/HEAD
-app.on(["OPTIONS", "HEAD"], "/mint", (c) => c.text("", 204));
-app.on(["OPTIONS", "HEAD"], "/mint/", (c) => c.text("", 204));
-
-// принимаем и GET, и POST (x402scan ресабмитит тем же методом)
-app.on(["GET", "POST"], "/mint", (c) =>
-  c.json({ report: { mint: "done", minted: 1 }, method: c.req.method }),
-);
-app.on(["GET", "POST"], "/mint/", (c) =>
-  c.json({ report: { mint: "done", minted: 1 }, method: c.req.method }),
-);
-
-serve({ fetch: app.fetch, port: Number(process.env.PORT || 4021) });
-
-
-
-
+const PORT = Number(process.env.PORT || 4021);
+serve({ fetch: app.fetch, port: PORT });
