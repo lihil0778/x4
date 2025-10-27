@@ -11,7 +11,7 @@ const payTo = process.env.ADDRESS as `0x${string}`;
 const network = process.env.NETWORK as Network;
 
 // ТВОЙ ПУБЛИЧНЫЙ HTTPS URL (этот же, что в x402scan)
-const PUBLIC_HTTPS = " https://3fe290f1f310dc86f98e396f7003857d.serveo.net/";
+const PUBLIC_HTTPS = "https://mint134.up.railway.app/";
 
 // sanity-check env
 if (!facilitatorUrl || !payTo || !network) {
@@ -78,6 +78,7 @@ app.on(["GET", "POST"], "/mint/", (c) =>
 );
 
 serve({ fetch: app.fetch, port: Number(process.env.PORT || 4021) });
+
 
 
 
